@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">IDinteractionMetawear</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_connecting">Connecting</string>
+    <string name="title_reconnect_attempt">Reconnecting</string>
+    <string name="message_wait">Please wait</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="leftDeviceDisconnected">Left device disconnected</string>
+    <string name="rightDeviceDisconnected">Right device disconnected</string>
+    <string name="leftDeviceConnected">Left device connected</string>
+    <string name="rightDeviceConnected">Right device connected</string>
+    <string name="leftDeviceInterrupted">Left device interrupted</string>
+    <string name="rightDeviceInterrupted">Right device interrupted</string>
+</resources>
