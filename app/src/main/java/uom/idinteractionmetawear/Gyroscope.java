@@ -27,6 +27,10 @@ public class Gyroscope {
     private Bmi160Gyro bmi160GyroModule;
     private CsvDAO csvDAO;
 
+    //Parameters for the gyroscope sensors
+    private final Bmi160Gyro.FullScaleRange scaleRange = Bmi160Gyro.FullScaleRange.FSR_2000;
+    private final OutputDataRate outputDataRate = OutputDataRate.ODR_100_HZ;
+
     /**
      * Constructor. Returns null if the accelerometer module cannot be found in this device.
      *
@@ -53,8 +57,8 @@ public class Gyroscope {
         // Set the measurement range to +/-2000 degrees/s
         // Set output data rate to 100Hz
         bmi160GyroModule.configure()
-                .setFullScaleRange(Bmi160Gyro.FullScaleRange.FSR_2000)
-                .setOutputDataRate(OutputDataRate.ODR_100_HZ)
+                .setFullScaleRange(scaleRange)
+                .setOutputDataRate(outputDataRate)
                 .commit();
 
         //Stream rotation data around the XYZ axes from the gyro sensor

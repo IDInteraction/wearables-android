@@ -30,6 +30,10 @@ public class Accelerometer {
 
     private CsvDAO csvDAO;
 
+    //Parameters for the gyroscope sensors
+    private final AccRange scaleRange = AccRange.AR_16G;
+    private final OutputDataRate outputDataRate = OutputDataRate.ODR_100_HZ;
+
     /**
      * Constructor. Returns null if the accelerometer module cannot be found in this device.
      * @param mwBoard
@@ -58,8 +62,8 @@ public class Accelerometer {
         // Set measurement range to +/- 16G
         // Set output data rate to 100Hz
         bmi160AccModule.configureAxisSampling()
-                .setFullScaleRange(AccRange.AR_16G)
-                .setOutputDataRate(OutputDataRate.ODR_100_HZ)
+                .setFullScaleRange(scaleRange)
+                .setOutputDataRate(outputDataRate)
                 .commit();
         // enable axis sampling
         bmi160AccModule.enableAxisSampling();

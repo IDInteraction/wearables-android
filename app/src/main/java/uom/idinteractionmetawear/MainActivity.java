@@ -68,6 +68,8 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
     Button startAccRightButton;
     Button startGyroRightButton;
 
+    Button startAllButton;
+
     private Logging logModule;
 
     @Override
@@ -214,6 +216,55 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             }
         });
 
+        startAllButton = (Button) findViewById(R.id.startAll);
+        startAllButton.setTextColor(Color.RED);
+        startAllButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+
+                if (mwBoardLeft==null || !mwBoardLeft.isConnected()){
+                    Toast.makeText(getApplicationContext(), R.string.leftDeviceDisconnected,
+                            Toast.LENGTH_LONG).show();
+                }
+                else if (mwBoardRight==null || !mwBoardRight.isConnected()){
+                    Toast.makeText(getApplicationContext(), R.string.rightDeviceDisconnected,
+                            Toast.LENGTH_LONG).show();
+                }
+                //If the sensor is not recording, start
+                else if (startAllButton.getCurrentTextColor() == Color.RED){
+                    startAllButton.setTextColor(Color.GREEN);
+                    Toast.makeText(getApplicationContext(), "Starting All sensors",
+                            Toast.LENGTH_LONG).show();
+                    //If accelerometer object is not created yet, initialise it
+                    if (gyroLeft == null)
+                        gyroLeft =  new Gyroscope(mwBoardLeft,getApplicationContext());
+                    //If accelerometer object is not created yet, initialise it
+                    if (gyroRight == null)
+                        gyroRight =  new Gyroscope(mwBoardRight,getApplicationContext());
+                    //If accelerometer object is not created yet, initialise it
+                    if (accelerometerLeft == null)
+                        accelerometerLeft =  new Accelerometer(mwBoardLeft,getApplicationContext());
+                    //If accelerometer object is not created yet, initialise it
+                    if (accelerometerRight == null)
+                        accelerometerRight =  new Accelerometer(mwBoardRight,getApplicationContext());
+
+                    //start logging
+                    gyroLeft.activateGyroscope(false,true,gyroLeftFilename);
+                    gyroRight.activateGyroscope(false,true,gyroRightFilename);
+                    accelerometerLeft.activateAccelerometer(false,true,accLeftFilename);
+                    accelerometerRight.activateAccelerometer(false,true,accRightFilename);
+                }
+                //If the sensor is recording, stop
+                else if (startAllButton.getCurrentTextColor() == Color.GREEN) {
+                    startAllButton.setTextColor(Color.RED);
+                    Toast.makeText(getApplicationContext(), "Stopping All sensors",
+                            Toast.LENGTH_LONG).show();
+                    gyroLeft.stopGyroscope();
+                    gyroRight.stopGyroscope();
+                    accelerometerLeft.stopAccelerometer();
+                    accelerometerRight.stopAccelerometer();
+                }
+            }
+        });
 
     }
 
@@ -305,7 +356,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
                             @Override
                             public void run() {
                                 rightDeviceStatus.setTextColor(Color.GREEN);
-                                rightDeviceStatus.setText(R.string.rightDeviceConnected + mwBoardRight.readBatteryLevel().toString());
+                                rightDeviceStatus.setText(R.string.rightDeviceConnected);
 
                                 //Request battery level, and display it when received
                                 mwBoardRight.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
@@ -315,7 +366,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
                                         interfaceAccess.runOnUiThread(new Runnable() {
                                             @Override
                                             public void run() {
-                                                rightDeviceStatus.setText(leftDeviceStatus.getText() + " Battery:" + String.format(Locale.UK, "%d", result));
+                                                rightDeviceStatus.setText(rightDeviceStatus.getText() + " Battery:" + String.format(Locale.UK, "%d", result));
                                             }
                                         });
                                     }
