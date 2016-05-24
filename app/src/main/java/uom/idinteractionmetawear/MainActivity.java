@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -23,12 +22,10 @@ import com.mbientlab.bletoolbox.scanner.BleScannerFragment;
 import com.mbientlab.metawear.AsyncOperation;
 import com.mbientlab.metawear.MetaWearBleService;
 import com.mbientlab.metawear.MetaWearBoard;
-import com.mbientlab.metawear.RouteManager;
 import com.mbientlab.metawear.UnsupportedModuleException;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.Logging;
 
-import java.io.File;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -42,17 +39,17 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
     private MetaWearBoard mwBoardLeft;
     private final String MW_LEFT_MAC_ADDRESS= "E6:0D:8E:C7:1D:45";
     private Accelerometer accelerometerLeft;
-    private String accLeftFilename = "accLeft.csv";
+    private String accLeftFilename = "accLeft"+System.currentTimeMillis()+".csv";
     private Gyroscope gyroLeft;
-    private String gyroLeftFilename = "gyroLeft.csv";
+    private String gyroLeftFilename = "gyroLeft"+System.currentTimeMillis()+".csv";
 
     //Device physically marked as R
     private MetaWearBoard mwBoardRight;
     private final String MW_RIGHT_MAC_ADDRESS= "C3:2D:1A:0E:30:C5";
     private Accelerometer accelerometerRight;
-    private String accRightFilename = "accRight.csv";
+    private String accRightFilename = "accRight"+System.currentTimeMillis()+".csv";
     private Gyroscope gyroRight;
-    private String gyroRightFilename = "gyroRight.csv";
+    private String gyroRightFilename = "gyroRight"+System.currentTimeMillis()+".csv";
 
 
     //Interface elements
@@ -105,24 +102,22 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             public void onClick(View v) {
                 if (mwBoardLeft==null || !mwBoardLeft.isConnected()){
                     Toast.makeText(getApplicationContext(), R.string.leftDeviceDisconnected,
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                 }
                 //If the sensor is not recording, start
                 else if (startAccLeftButton.getCurrentTextColor() == Color.RED){
                     startAccLeftButton.setTextColor(Color.GREEN);
                     Toast.makeText(getApplicationContext(), "Starting Left accelerometer",
-                            Toast.LENGTH_LONG).show();
-                    //If accelerometer object is not created yet, initialise it
-                    if (accelerometerLeft == null)
-                        accelerometerLeft =  new Accelerometer(mwBoardLeft,getApplicationContext());
+                            Toast.LENGTH_SHORT).show();
+
                     //start logging
-                    accelerometerLeft.activateAccelerometer(false,true,accLeftFilename);
+                    accelerometerLeft.startAccelerometer();
                 }
                 //If the sensor is recording, stop
                 else if (startAccLeftButton.getCurrentTextColor() == Color.GREEN) {
                     startAccLeftButton.setTextColor(Color.RED);
                     Toast.makeText(getApplicationContext(), "Stopping Left accelerometer",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                     accelerometerLeft.stopAccelerometer();
                 }
             }
@@ -133,25 +128,22 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             public void onClick(View v) {
                 if (mwBoardLeft==null || !mwBoardLeft.isConnected()){
                     Toast.makeText(getApplicationContext(), R.string.leftDeviceDisconnected,
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                 }
                 //If the sensor is not recording, start
                 else if (startGyroLeftButton.getCurrentTextColor() == Color.RED){
                     startGyroLeftButton.setTextColor(Color.GREEN);
                     Toast.makeText(getApplicationContext(), "Starting Left gyroscope",
-                            Toast.LENGTH_LONG).show();
-                    //If accelerometer object is not created yet, initialise it
-                    if (gyroLeft == null)
-                        gyroLeft =  new Gyroscope(mwBoardLeft,getApplicationContext());
+                            Toast.LENGTH_SHORT).show();
 
                     //start logging
-                    gyroLeft.activateGyroscope(false,true,gyroLeftFilename);
+                    gyroLeft.startGyroscope();
                 }
                 //If the sensor is recording, stop
                 else if (startGyroLeftButton.getCurrentTextColor() == Color.GREEN) {
                     startGyroLeftButton.setTextColor(Color.RED);
                     Toast.makeText(getApplicationContext(), "Stopping Left gyroscope",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                     gyroLeft.stopGyroscope();
                 }
             }
@@ -163,24 +155,22 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             public void onClick(View v) {
                 if (mwBoardRight==null || !mwBoardRight.isConnected()){
                     Toast.makeText(getApplicationContext(), R.string.rightDeviceDisconnected,
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                 }
                 //If the sensor is not recording, start
                 else if (startAccRightButton.getCurrentTextColor() == Color.RED){
                     startAccRightButton.setTextColor(Color.GREEN);
                     Toast.makeText(getApplicationContext(), "Starting Right accelerometer",
-                            Toast.LENGTH_LONG).show();
-                    //If accelerometer object is not created yet, initialise it
-                    if (accelerometerRight == null)
-                        accelerometerRight =  new Accelerometer(mwBoardRight,getApplicationContext());
+                            Toast.LENGTH_SHORT).show();
+
                     //start logging
-                    accelerometerRight.activateAccelerometer(false,true,accRightFilename);
+                    accelerometerRight.startAccelerometer();
                 }
                 //If the sensor is recording, stop
                 else if (startAccRightButton.getCurrentTextColor() == Color.GREEN) {
                     startAccRightButton.setTextColor(Color.RED);
                     Toast.makeText(getApplicationContext(), "Stopping Right accelerometer",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                     accelerometerRight.stopAccelerometer();
                 }
             }
@@ -192,25 +182,22 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             public void onClick(View v) {
                 if (mwBoardRight==null || !mwBoardRight.isConnected()){
                     Toast.makeText(getApplicationContext(), R.string.rightDeviceDisconnected,
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                 }
                 //If the sensor is not recording, start
                 else if (startGyroRightButton.getCurrentTextColor() == Color.RED){
                     startGyroRightButton.setTextColor(Color.GREEN);
                     Toast.makeText(getApplicationContext(), "Starting Right gyroscope",
-                            Toast.LENGTH_LONG).show();
-                    //If accelerometer object is not created yet, initialise it
-                    if (gyroRight == null)
-                        gyroRight =  new Gyroscope(mwBoardRight,getApplicationContext());
+                            Toast.LENGTH_SHORT).show();
 
                     //start logging
-                    gyroRight.activateGyroscope(false,true,gyroRightFilename);
+                    gyroRight.startGyroscope();
                 }
                 //If the sensor is recording, stop
                 else if (startGyroRightButton.getCurrentTextColor() == Color.GREEN) {
                     startGyroRightButton.setTextColor(Color.RED);
                     Toast.makeText(getApplicationContext(), "Stopping Right gyroscope",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                     gyroRight.stopGyroscope();
                 }
             }
@@ -223,41 +210,54 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
 
                 if (mwBoardLeft==null || !mwBoardLeft.isConnected()){
                     Toast.makeText(getApplicationContext(), R.string.leftDeviceDisconnected,
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                 }
                 else if (mwBoardRight==null || !mwBoardRight.isConnected()){
                     Toast.makeText(getApplicationContext(), R.string.rightDeviceDisconnected,
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                 }
-                //If the sensor is not recording, start
+                //If all devices are ready and the sensor is not recording, start
                 else if (startAllButton.getCurrentTextColor() == Color.RED){
                     startAllButton.setTextColor(Color.GREEN);
-                    Toast.makeText(getApplicationContext(), "Starting All sensors",
-                            Toast.LENGTH_LONG).show();
-                    //If accelerometer object is not created yet, initialise it
-                    if (gyroLeft == null)
-                        gyroLeft =  new Gyroscope(mwBoardLeft,getApplicationContext());
-                    //If accelerometer object is not created yet, initialise it
-                    if (gyroRight == null)
-                        gyroRight =  new Gyroscope(mwBoardRight,getApplicationContext());
-                    //If accelerometer object is not created yet, initialise it
-                    if (accelerometerLeft == null)
-                        accelerometerLeft =  new Accelerometer(mwBoardLeft,getApplicationContext());
-                    //If accelerometer object is not created yet, initialise it
-                    if (accelerometerRight == null)
-                        accelerometerRight =  new Accelerometer(mwBoardRight,getApplicationContext());
+
+                    //Turn on the rest of buttons, indicating they are all working.
+                    //They will also be disabled.
+                    // Individual sensor interaction is disabled while all sensors are activated
+                    startAccLeftButton.setEnabled(false);
+                    startAccLeftButton.setTextColor(Color.GREEN);
+                    startGyroLeftButton.setEnabled(false);
+                    startGyroLeftButton.setTextColor(Color.GREEN);
+                    startAccRightButton.setEnabled(false);
+                    startAccRightButton.setTextColor(Color.GREEN);
+                    startGyroRightButton.setEnabled(false);
+                    startGyroRightButton.setTextColor(Color.GREEN);
 
                     //start logging
-                    gyroLeft.activateGyroscope(false,true,gyroLeftFilename);
-                    gyroRight.activateGyroscope(false,true,gyroRightFilename);
-                    accelerometerLeft.activateAccelerometer(false,true,accLeftFilename);
-                    accelerometerRight.activateAccelerometer(false,true,accRightFilename);
+                    Log.i("MainActivity", "Starting all sensors at: " + System.currentTimeMillis());
+                    gyroLeft.startGyroscope();
+                    Log.i("MainActivity", "Starting gyroLeft at: " + System.currentTimeMillis());
+                    gyroRight.startGyroscope();
+                    Log.i("MainActivity", "Starting gyroRight at: " + System.currentTimeMillis());
+                    accelerometerLeft.startAccelerometer();
+                    Log.i("MainActivity", "Starting accelerometerLeft at: " + System.currentTimeMillis());
+                    accelerometerRight.startAccelerometer();
+                    Log.i("MainActivity", "Starting accelerometerRight at: " + System.currentTimeMillis());
                 }
                 //If the sensor is recording, stop
                 else if (startAllButton.getCurrentTextColor() == Color.GREEN) {
                     startAllButton.setTextColor(Color.RED);
+
+                    startAccLeftButton.setEnabled(true);
+                    startAccLeftButton.setTextColor(Color.RED);
+                    startGyroLeftButton.setEnabled(true);
+                    startGyroLeftButton.setTextColor(Color.RED);
+                    startAccRightButton.setEnabled(true);
+                    startAccRightButton.setTextColor(Color.RED);
+                    startGyroRightButton.setEnabled(true);
+                    startGyroRightButton.setTextColor(Color.RED);
+
                     Toast.makeText(getApplicationContext(), "Stopping All sensors",
-                            Toast.LENGTH_LONG).show();
+                            Toast.LENGTH_SHORT).show();
                     gyroLeft.stopGyroscope();
                     gyroRight.stopGyroscope();
                     accelerometerLeft.stopAccelerometer();
@@ -328,6 +328,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
                             public void run() {
                                 leftDeviceStatus.setTextColor(Color.GREEN);
                                 leftDeviceStatus.setText(R.string.leftDeviceConnected);
+                                configureSensorsLeft();
 
                                 //Request battery level, and display it when received
                                 mwBoardLeft.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
@@ -357,6 +358,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
                             public void run() {
                                 rightDeviceStatus.setTextColor(Color.GREEN);
                                 rightDeviceStatus.setText(R.string.rightDeviceConnected);
+                                configureSensorsRight();
 
                                 //Request battery level, and display it when received
                                 mwBoardRight.readBatteryLevel().onComplete(new AsyncOperation.CompletionHandler<Byte>() {
@@ -446,6 +448,40 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
         mwBoardGeneric.connect();
     }
 
+    /**
+     * This function is executed as soon as the board is selected.
+     * This way any possible delay caused by the configuration of the sensors is avoided
+     */
+    private void configureSensorsLeft() {
+
+        //If accelerometer object is not created yet, initialise it
+        if (gyroLeft == null)
+            gyroLeft = new Gyroscope(mwBoardLeft, getApplicationContext(), gyroLeftFilename);
+
+        //If accelerometer object is not created yet, initialise it
+        if (accelerometerLeft == null)
+            accelerometerLeft = new Accelerometer(mwBoardLeft, getApplicationContext(), accLeftFilename);
+
+        //start configuration
+        gyroLeft.configureGyroscope(false, true);
+        accelerometerLeft.configureAccelerometer(false, true);
+    }
+
+    private void configureSensorsRight() {
+
+        //If accelerometer object is not created yet, initialise it
+        if (gyroRight == null)
+            gyroRight = new Gyroscope(mwBoardRight, getApplicationContext(), gyroRightFilename);
+        //If accelerometer object is not created yet, initialise it
+        if (accelerometerRight == null)
+            accelerometerRight = new Accelerometer(mwBoardRight, getApplicationContext(), accRightFilename);
+
+        //start configuration
+        gyroRight.configureGyroscope(false, true);
+        accelerometerRight.configureAccelerometer(false, true);
+    }
+
+
     public void turnOnLed(MetaWearBoard mwBoard) {
         try {
             // Do not need to type cast result to Led class
@@ -460,7 +496,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             ledCtrllr.play(false);
         } catch (UnsupportedModuleException e) {
             Toast.makeText(this, "Led module not supported on this board / firmware",
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_SHORT).show();
             Log.e("MainActivity", "No Led on the board", e);
         }
     }
@@ -473,7 +509,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             //logModule.startLogging(true);
         } catch (UnsupportedModuleException e) {
             Toast.makeText(this, "Logging module not supported on this board / firmware",
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_SHORT).show();
             Log.e("MainActivity", "No logging module on the board", e);
         }
     }

@@ -13,6 +13,7 @@ import com.mbientlab.metawear.data.CartesianFloat;
 import com.mbientlab.metawear.module.Bmi160Gyro;
 import com.mbientlab.metawear.module.Bmi160Gyro.OutputDataRate;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 
@@ -25,21 +26,27 @@ import java.util.Date;
 public class Gyroscope {
 
     private Bmi160Gyro bmi160GyroModule;
+
+    private String filename;
+    private ArrayList<String> capturedData;
+    private int bufferSize = 100;
     private CsvDAO csvDAO;
 
     //Parameters for the gyroscope sensors
     private final Bmi160Gyro.FullScaleRange scaleRange = Bmi160Gyro.FullScaleRange.FSR_2000;
-    private final OutputDataRate outputDataRate = OutputDataRate.ODR_100_HZ;
+    private final OutputDataRate outputDataRate = OutputDataRate.ODR_25_HZ;
 
     /**
      * Constructor. Returns null if the accelerometer module cannot be found in this device.
      *
      * @param mwBoard
      */
-    public Gyroscope(MetaWearBoard mwBoard, Context context){
+    public Gyroscope(MetaWearBoard mwBoard, Context context,String outputFilename){
         try {
             bmi160GyroModule = mwBoard.getModule(Bmi160Gyro.class);
-            csvDAO = new CsvDAO(context,context.getExternalFilesDir(null));;
+            csvDAO = new CsvDAO(context,context.getExternalFilesDir(null));
+            capturedData = new ArrayList<String>();
+            filename = outputFilename;
 
         } catch (UnsupportedModuleException e) {
             bmi160GyroModule = null;
@@ -51,9 +58,8 @@ public class Gyroscope {
      *
      * @param reportToConsole if true, it will report the read values to the console
      * @param storeToFile if true, it will store the read values to a file
-     * @param filename the name of the file where the data will be stored (if storeToFile is true)
      */
-    public void activateGyroscope(final Boolean reportToConsole, final Boolean storeToFile, final String filename) {
+    public void configureGyroscope(final Boolean reportToConsole, final Boolean storeToFile) {
         // Set the measurement range to +/-2000 degrees/s
         // Set output data rate to 100Hz
         bmi160GyroModule.configure()
@@ -68,20 +74,23 @@ public class Gyroscope {
                     public void success(RouteManager result) {
                         result.subscribe("gyro_stream", new RouteManager.MessageHandler() {
                             @Override
-                            public void process(Message msg) {
-                                final CartesianFloat spinData = msg.getData(CartesianFloat.class);
+                            public void process(Message message) {
+                                final CartesianFloat spinData = message.getData(CartesianFloat.class);
                                 if (reportToConsole)
                                     Log.i("Gyroscope", spinData.toString());
                                 if(storeToFile) {
-                                    //prepare the csv line to store
-                                    csvDAO.writeToFile(filename, System.currentTimeMillis() + ","
-                                            + spinData.toString().replaceAll("[()]",""));
+
+                                    capturedData.add(System.currentTimeMillis() + "," + message.getTimestamp().getTimeInMillis() + ","
+                                                + spinData.toString().replaceAll("[()]",""));
+                                        if (capturedData.size() >= bufferSize){
+                                            flushDataBuffer();
+                                        }
+
                                 }
                             }
                         });
                     }
                 });
-        bmi160GyroModule.start();
 
     }
 
@@ -89,7 +98,26 @@ public class Gyroscope {
      *     Stop Gyroscope sampling
      *
      */
+    public void startGyroscope(){
+        Log.i("Gyroscope", "Starting at:"+System.currentTimeMillis());
+        capturedData.add(System.currentTimeMillis() + ",-1,-1,-1");
+        bmi160GyroModule.start();
+    }
+
+    private void flushDataBuffer(){
+        Log.i("Gyroscope", "Storing " + capturedData.size() +" to " + filename);
+        for (int i=0; i<capturedData.size();i++) {
+            csvDAO.writeToFile(filename, capturedData.get(i));
+        }
+        capturedData = new ArrayList<String>();
+    }
+    /**
+     *     Stop Gyroscope sampling
+     *
+     */
     public void stopGyroscope(){
+        Log.i("Gyroscope", "Final flush to " +filename);
+        flushDataBuffer();
         bmi160GyroModule.stop();
     }
 }

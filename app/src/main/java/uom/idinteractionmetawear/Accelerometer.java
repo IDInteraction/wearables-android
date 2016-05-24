@@ -16,7 +16,8 @@ import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.module.Bmi160Accelerometer.AccRange;
 import com.mbientlab.metawear.module.Bmi160Accelerometer.OutputDataRate;
 
-import java.io.File;
+import java.util.ArrayList;
+
 
 /**
  * Created by Aitor on 26/04/2016.
@@ -28,20 +29,25 @@ public class Accelerometer {
 
     private Bmi160Accelerometer bmi160AccModule;
 
+    private String filename;
+    private ArrayList<String> capturedData;
+    private int bufferSize = 100;
     private CsvDAO csvDAO;
 
     //Parameters for the gyroscope sensors
     private final AccRange scaleRange = AccRange.AR_16G;
-    private final OutputDataRate outputDataRate = OutputDataRate.ODR_100_HZ;
+    private final OutputDataRate outputDataRate = OutputDataRate.ODR_25_HZ;
 
     /**
      * Constructor. Returns null if the accelerometer module cannot be found in this device.
      * @param mwBoard
      */
-    public Accelerometer(MetaWearBoard mwBoard, Context context){
+    public Accelerometer(MetaWearBoard mwBoard, Context context, String outputFilename){
         try {
             bmi160AccModule= mwBoard.getModule(Bmi160Accelerometer.class);
-            csvDAO = new CsvDAO(context,context.getExternalFilesDir(null));;
+            csvDAO = new CsvDAO(context,context.getExternalFilesDir(null));
+            capturedData = new ArrayList<String>();
+            filename = outputFilename;
         } catch (UnsupportedModuleException e) {
             bmi160AccModule = null;
         }
@@ -56,9 +62,8 @@ public class Accelerometer {
      *
      * @param reportToConsole if true, it will report the read values to the console
      * @param storeToFile if true, it will store the read values to a file
-     * @param filename the name of the file where the data will be stored (if storeToFile is true)
      */
-    public void activateAccelerometer(final Boolean reportToConsole, final Boolean storeToFile, final String filename) {
+    public void configureAccelerometer(final Boolean reportToConsole, final Boolean storeToFile) {
         // Set measurement range to +/- 16G
         // Set output data rate to 100Hz
         bmi160AccModule.configureAxisSampling()
@@ -80,14 +85,35 @@ public class Accelerometer {
                                 if (reportToConsole)
                                     Log.i("Accelerometer", cartesian.toString());
                                 if(storeToFile) {
-                                    csvDAO.writeToFile(filename, System.currentTimeMillis() + ","
+                                    capturedData.add(System.currentTimeMillis() + "," + message.getTimestamp().getTimeInMillis() + ","
                                             + cartesian.toString().replaceAll("[()]",""));
+                                    if (capturedData.size() >= bufferSize){
+                                        flushDataBuffer();
+                                    }
+
                                 }
                             }
                         });
                     }
                 });
+    }
+
+    /**
+     *     Stop Accelerometer sampling
+     *
+     */
+    public void startAccelerometer(){
+        Log.i("Accelerometer", "Starting at:"+System.currentTimeMillis());
+        capturedData.add(System.currentTimeMillis() + ",-1,-1,-1");
         bmi160AccModule.start();
+    }
+
+    private void flushDataBuffer(){
+        Log.i("Accelerometer", "Storing " + capturedData.size() +" to " + filename);
+        for (int i=0; i<capturedData.size();i++) {
+            csvDAO.writeToFile(filename, capturedData.get(i));
+        }
+        capturedData = new ArrayList<String>();
     }
 
     /**
@@ -95,6 +121,8 @@ public class Accelerometer {
      *
      */
     public void stopAccelerometer(){
+        flushDataBuffer();
+        Log.i("Accelerometer", "Final flush to " +filename);
         bmi160AccModule.stop();
     }
 }

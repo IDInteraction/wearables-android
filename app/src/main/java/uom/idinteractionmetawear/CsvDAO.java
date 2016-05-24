@@ -49,7 +49,7 @@ public class CsvDAO {
      public void writeToFile(String filename, String content) {
         try {
             File tempFile = new File(dir,filename);
-            Log.i("CsvDAO.java", "logging data to" + tempFile.toString());
+            //Log.i("CsvDAO.java", "logging data to" + tempFile.toString());
 
             //Second parameter makes the function append to the text, rather than erase old content
             FileOutputStream stream = new FileOutputStream(tempFile,true);
