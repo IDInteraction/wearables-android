@@ -46,7 +46,7 @@
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
         android:layout_above="@+id/leftMvBoardStatus"
-        android:layout_below="@+id/textView" />
+        android:layout_below="@+id/disconnectButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -86,7 +86,7 @@
         android:layout_height="wrap_content"
         android:text="Accelerometer"
         android:id="@+id/startAccLeft"
-        android:layout_above="@+id/startGyroLeft"
+        android:layout_above="@+id/leftDeviceAccStatus"
         android:layout_alignParentStart="true" />
 
     <Button
@@ -95,7 +95,7 @@
         android:layout_height="wrap_content"
         android:text="Accelerometer"
         android:id="@+id/startAccRight"
-        android:layout_above="@+id/startGyroRight"
+        android:layout_above="@+id/rightDeviceAccStatus"
         android:layout_alignParentEnd="true" />
 
     <Button
@@ -103,7 +103,7 @@
         android:layout_height="wrap_content"
         android:text="Gyroscope"
         android:id="@+id/startGyroLeft"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/leftDeviceGyroStatus"
         android:layout_alignParentStart="true" />
 
     <Button
@@ -111,7 +111,7 @@
         android:layout_height="wrap_content"
         android:text="Gyroscope"
         android:id="@+id/startGyroRight"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/rightDeviceGyroStatus"
         android:layout_alignParentEnd="true" />
 
     <TextView
@@ -119,8 +119,8 @@
         android:layout_height="wrap_content"
         android:text="List of nearby devices"
         android:id="@+id/textView"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentStart="true" />
+        android:layout_below="@+id/captureStream"
+        android:layout_alignEnd="@+id/startAccLeft" />
 
     <Button
         android:layout_width="wrap_content"
@@ -129,5 +129,75 @@
         android:id="@+id/startAll"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Disconnect"
+        android:id="@+id/disconnectButton"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="STREAM"
+        android:id="@+id/captureStream"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="or"
+        android:id="@+id/textView3"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/captureStream"
+        android:layout_marginLeft = "10px"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="LOG"
+        android:id="@+id/captureLog"
+        android:layout_alignParentTop="true"
+        android:layout_toEndOf="@+id/textView3"
+        android:layout_marginLeft = "10px"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Accelerometer Status"
+        android:id="@+id/leftDeviceAccStatus"
+        android:layout_above="@+id/startGyroLeft"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gyroscope Status"
+        android:id="@+id/leftDeviceGyroStatus"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gyroscope Status"
+        android:id="@+id/rightDeviceGyroStatus"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Accelerometer Status"
+        android:id="@+id/rightDeviceAccStatus"
+        android:layout_above="@+id/startGyroRight"
+        android:layout_alignParentEnd="true" />
+
 
 </RelativeLayout>
