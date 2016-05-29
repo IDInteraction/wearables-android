@@ -1,10 +1,9 @@
 package uom.idinteractionmetawear;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Color;
-import android.os.Environment;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.TextView;
 
@@ -37,7 +36,7 @@ public class Accelerometer {
     private String accStreamKEY = "acc_stream";
     private String accLogKEY = "acc_log";
 
-    private static final String TAG = "Accelerometer";
+    private String logTag = "Accelerometer";
 
     private Bmi160Accelerometer bmi160AccModule;
 
@@ -61,15 +60,21 @@ public class Accelerometer {
      * Constructor. Returns null if the accelerometer module cannot be found in this device.
      * @param mwBoard
      */
-    public Accelerometer(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, String outputFilename){
+    public Accelerometer(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, MainActivity.CaptureMode mode, String outputFilename, String deviceInfo){
         try {
             interfaceAccess = parentInterfaceAccess;
             accStatus = statusTextview;
             bmi160AccModule= mwBoard.getModule(Bmi160Accelerometer.class);
+            accStreamKEY+= SystemClock.currentThreadTimeMillis();
+            accLogKEY+= SystemClock.currentThreadTimeMillis();
+
             csvDAO = new CsvDAO(parentInterfaceAccess.getApplicationContext(),
                     parentInterfaceAccess.getApplicationContext().getExternalFilesDir(null));
+            captureMode = mode;
             capturedData = new ArrayList<String>();
-            filename = outputFilename;
+            //add the capture mode to the start of the filename
+            filename = mode.toString()+outputFilename;
+            logTag += deviceInfo;
             logModule = mwBoard.getModule(Logging.class);
             setStatus("Interface Initialised",Color.RED);
 
@@ -104,7 +109,7 @@ public class Accelerometer {
      * @param reportToConsole if true, it will report the read values to the console
      * @param storeToFile if true, it will store the read values to a file
      */
-    public void configureAccelerometer(MainActivity.CaptureMode mode, final Boolean reportToConsole, final Boolean storeToFile) {
+    public void configureAccelerometer(final Boolean reportToConsole, final Boolean storeToFile) {
         // Set measurement range to +/- 16G
         // Set output data rate to 100Hz
         bmi160AccModule.configureAxisSampling()
@@ -114,7 +119,6 @@ public class Accelerometer {
         // enable axis sampling
         bmi160AccModule.enableAxisSampling();
 
-        captureMode = mode;
 
         switch (captureMode) {
             case STREAM:
@@ -123,13 +127,15 @@ public class Accelerometer {
                         .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
                             @Override
                             public void success(RouteManager result) {
-                                setStatus("Stream working correctly" + System.currentTimeMillis(),Color.GREEN);
+                                setStatus("Stream working correctly",Color.GREEN);
                                 result.subscribe(accStreamKEY, new RouteManager.MessageHandler() {
                                     @Override
                                     public void process(Message message) {
                                         CartesianFloat cartesian = message.getData(CartesianFloat.class);
+                                        setStatus(cartesian.toString(),Color.GREEN);
+
                                         if (reportToConsole)
-                                            Log.i(TAG, cartesian.toString());
+                                            Log.i(logTag, cartesian.toString());
                                         if (storeToFile) {
                                             capturedData.add(System.currentTimeMillis() + "," + message.getTimestamp().getTimeInMillis() + ","
                                                     + cartesian.toString().replaceAll("[()]", ""));
@@ -144,29 +150,31 @@ public class Accelerometer {
                             @Override
                             public void failure(Throwable error) {
                                 setStatus("Stream error!",Color.RED);
-                                Log.e(TAG, "Error committing route", error);
+                                Log.e(logTag, "Error committing route", error);
                             }
                         });
 
                 break;
 
             case LOG:
-                Log.i(TAG, "Starting log mode");
+                Log.i(logTag, "Starting log mode");
                 // Switch the accelerometer to active mode
                 bmi160AccModule.routeData().fromAxes().log(accLogKEY).commit()
                         .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
                             @Override
                             public void success(RouteManager result) {
-                                Log.i(TAG, "log data source correctly configured");
+                                Log.i(logTag, "log data source correctly configured");
                                 setStatus("Log working correctly",Color.GREEN);
 
                                 result.setLogMessageHandler(accLogKEY, new RouteManager.MessageHandler() {
                                     @Override
                                     public void process(Message message) {
                                         CartesianFloat cartesian = message.getData(CartesianFloat.class);
-                                        Log.i(TAG, "Processing:" + String.format("Log: %s", cartesian.toString()));
+                                        setStatus(cartesian.toString(),Color.GREEN);
+
+                                        Log.i(logTag, "Processing:" + String.format("Log: %s", cartesian.toString()));
                                         if (reportToConsole)
-                                            Log.i(TAG, cartesian.toString());
+                                            Log.i(logTag, cartesian.toString());
                                         if (storeToFile) {
                                             capturedData.add(System.currentTimeMillis() + "," + message.getTimestamp().getTimeInMillis() + ","
                                                     + cartesian.toString().replaceAll("[()]", ""));
@@ -179,13 +187,13 @@ public class Accelerometer {
                             }
                             @Override
                             public void failure(Throwable error) {
-                                Log.e(TAG, "Error committing route", error);
+                                Log.e(logTag, "Error committing route", error);
                                 setStatus("Log error!",Color.RED);
                             }
                         });
                 break;
             default:
-                Log.e(TAG,"incorrect logging mode");
+                Log.e(logTag,"incorrect logging mode");
                 setStatus("Incorrect logging mode",Color.YELLOW);
 
                 break;
@@ -197,7 +205,7 @@ public class Accelerometer {
      *
      */
     public void startAccelerometer(){
-        Log.i(TAG, "Starting at:"+System.currentTimeMillis());
+        Log.i(logTag, "Starting at:"+System.currentTimeMillis());
         capturedData.add(captureMode +"," + System.currentTimeMillis() + ",-1,-1,-1");
         if(captureMode== MainActivity.CaptureMode.LOG) {
             logModule.startLogging();
@@ -217,7 +225,7 @@ public class Accelerometer {
         @Override
         public void run() {
             // Do something here on the main thread
-            Log.d(TAG, "Executing periodic log flush");
+            Log.d(logTag, "Executing periodic log flush");
             downloadDataLog();
             logDownloadHandler.postDelayed(periodicLogDownload, logDownloadFrequency);
         }
@@ -227,18 +235,19 @@ public class Accelerometer {
         logModule.downloadLog(0.05f,new Logging.DownloadHandler() {
             @Override
             public void onProgressUpdate(int nEntriesLeft, int totalEntries) {
-                Log.i(TAG, String.format("Progress= %d / %d", nEntriesLeft,
+                Log.i(logTag, String.format("Progress= %d / %d", nEntriesLeft,
                         totalEntries));
             }
             @Override
             public void receivedUnknownLogEntry(byte logId, Calendar timestamp, byte[] data) {
-                Log.i(TAG, String.format("Unknown log entry: {id: %d, data: %s}", logId,timestamp.getTimeInMillis(), Arrays.toString(data)));
+                Log.i(logTag, String.format("Unknown log entry: {id: %d, data: %s}", logId,timestamp.getTimeInMillis(), Arrays.toString(data)));
             }
         });
     }
 
     private void flushDataBuffer(){
-        Log.i(TAG, "Storing " + capturedData.size() +" to " + filename);
+        Log.i(logTag, "Storing " + capturedData.size() +" to " + filename);
+
         for (int i=0; i<capturedData.size();i++) {
             csvDAO.writeToFile(filename, capturedData.get(i));
         }
@@ -254,12 +263,14 @@ public class Accelerometer {
      */
     public void stopAccelerometer(){
         flushDataBuffer();
-        Log.i(TAG, "Final flush to " +filename);
+        Log.i(logTag, "Final flush to " +filename);
         if(captureMode== MainActivity.CaptureMode.LOG) {
-            Log.i(TAG, "Stopping log");
+            Log.i(logTag, "Stopping log");
             logModule.stopLogging();
-            logDownloadHandler.removeCallbacks(periodicLogDownload);
+            //There is a situation in which if the log mode is started, but failed to connect, this object will never be initialised, crashing the app
+            if (logDownloadHandler!=null) logDownloadHandler.removeCallbacks(periodicLogDownload);
         }
+        bmi160AccModule.disableAxisSampling();
         bmi160AccModule.stop();
     }
 }

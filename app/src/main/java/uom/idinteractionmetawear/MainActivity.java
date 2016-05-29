@@ -24,6 +24,7 @@ import com.mbientlab.metawear.AsyncOperation;
 import com.mbientlab.metawear.MetaWearBleService;
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.UnsupportedModuleException;
+import com.mbientlab.metawear.module.Debug;
 import com.mbientlab.metawear.module.Led;
 import com.mbientlab.metawear.module.Logging;
 
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
 
     TextView captureModeStream;
     TextView captureModeLog;
+    Button resetButton;
     Button disconnectAllButton;
 
     //sensors will have access to a textview, in order to report individual status and problems
@@ -162,18 +164,51 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
                 }
             });
 
+            resetButton = (Button) findViewById(R.id.resetButton);
+            resetButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    try {
+                        Toast.makeText(getApplicationContext(), "Resetting all connected devices",
+                                Toast.LENGTH_SHORT).show();
+                        if (mwBoardLeft != null) mwBoardLeft.getModule(Debug.class).resetDevice();
+                        if (mwBoardRight != null) mwBoardRight.getModule(Debug.class).resetDevice();
+                    }catch(UnsupportedModuleException e){
+                        e.printStackTrace();
+                    }
+                }
+                                           });
             disconnectAllButton = (Button) findViewById(R.id.disconnectButton);
             disconnectAllButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     if (mwBoardLeft != null) {
                         mwBoardLeft.setConnectionStateHandler(null);
+                        mwBoardLeft.removeRoutes();
                         mwBoardLeft.disconnect();
                         mwBoardLeft=null;
+
+                        if(gyroLeft!=null){
+                            gyroLeft.stopGyroscope();
+                            gyroLeft=null;
+                        }
+                        if(accelerometerLeft!=null){
+                            accelerometerLeft.stopAccelerometer();
+                            accelerometerLeft=null;
+                        }
                     }
+
                     if (mwBoardRight != null){
                         mwBoardRight.setConnectionStateHandler(null);
+                        mwBoardRight.removeRoutes();
                         mwBoardRight.disconnect();
                         mwBoardRight=null;
+                    }
+                    if(gyroRight!=null){
+                        gyroRight.stopGyroscope();
+                        gyroRight=null;
+                    }
+                    if(accelerometerRight!=null){
+                        accelerometerRight.stopAccelerometer();
+                        accelerometerRight=null;
                     }
 
                     interfaceAccess.runOnUiThread(new Runnable() {
@@ -183,6 +218,16 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
                             leftDeviceStatus.setText(R.string.leftDeviceDisconnected);
                             rightDeviceStatus.setTextColor(Color.RED);
                             rightDeviceStatus.setText(R.string.leftDeviceDisconnected);
+
+                            leftGyroStatus.setTextColor(Color.GRAY);
+                            leftGyroStatus.setText("Gyroscope Status");
+                            leftAccStatus.setTextColor(Color.GRAY);
+                            leftAccStatus.setText("Accelerometer Status");
+
+                            rightGyroStatus.setTextColor(Color.GRAY);
+                            rightGyroStatus.setText("Gyroscope Status");
+                            rightAccStatus.setTextColor(Color.GRAY);
+                            rightAccStatus.setText("Accelerometer Status");
                         }
                     });
                 }
@@ -547,32 +592,34 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
      * This way any possible delay caused by the configuration of the sensors is avoided
      */
     private void configureSensorsLeft() {
+        Log.i("MainActivity", "Configuring Left sensors");
+        mwBoardLeft.removeRoutes();
+        //If accelerometer object is not created yet, initialise it
+        if (gyroLeft != null) gyroLeft.stopGyroscope();
+        gyroLeft = new Gyroscope(mwBoardLeft, this, leftGyroStatus, captureMode, gyroLeftFilename,"Left");
 
         //If accelerometer object is not created yet, initialise it
-        if (gyroLeft == null) {
-            gyroLeft = new Gyroscope(mwBoardLeft, this, leftGyroStatus, gyroLeftFilename);
-        }
-        //If accelerometer object is not created yet, initialise it
-        if (accelerometerLeft == null)
-            accelerometerLeft = new Accelerometer(mwBoardLeft, this, leftAccStatus, accLeftFilename);
+        if (accelerometerLeft != null) accelerometerLeft.stopAccelerometer();
+        accelerometerLeft = new Accelerometer(mwBoardLeft, this, leftAccStatus, captureMode, accLeftFilename,"Left");
 
         //start configuration
-        gyroLeft.configureGyroscope(captureMode,false, true);
-        accelerometerLeft.configureAccelerometer(captureMode,false, true);
+        gyroLeft.configureGyroscope(false, true);
+        accelerometerLeft.configureAccelerometer(false, true);
     }
 
     private void configureSensorsRight() {
-
+        Log.i("MainActivity", "Configuring Right sensors");
+        mwBoardRight.removeRoutes();
         //If accelerometer object is not created yet, initialise it
-        if (gyroRight == null)
-            gyroRight = new Gyroscope(mwBoardRight, this, rightGyroStatus, gyroRightFilename);
+        if (gyroRight != null) gyroRight.stopGyroscope();
+        gyroRight = new Gyroscope(mwBoardRight, this, rightGyroStatus, captureMode, gyroRightFilename,"Right");
         //If accelerometer object is not created yet, initialise it
-        if (accelerometerRight == null)
-            accelerometerRight = new Accelerometer(mwBoardRight, this, rightAccStatus, accRightFilename);
+        if (accelerometerRight != null) accelerometerRight.stopAccelerometer();
+        accelerometerRight = new Accelerometer(mwBoardRight, this, rightAccStatus, captureMode, accRightFilename,"Right");
 
         //start configuration
-        gyroRight.configureGyroscope(captureMode,false, true);
-        accelerometerRight.configureAccelerometer(captureMode,false, true);
+        gyroRight.configureGyroscope(false, true);
+        accelerometerRight.configureAccelerometer(false, true);
     }
 
 

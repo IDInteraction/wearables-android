@@ -1,7 +1,6 @@
 package uom.idinteractionmetawear;
 
 import android.app.Activity;
-import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -35,7 +34,7 @@ public class Gyroscope {
     private String gyroStreamKEY = "gyro_stream";
     private String gyroLogKEY = "gyro_log";
 
-    private static final String TAG = "Gyroscope";
+    private String logTag = "Gyroscope";
 
     private Bmi160Gyro bmi160GyroModule;
 
@@ -60,7 +59,7 @@ public class Gyroscope {
      *
      * @param mwBoard
      */
-    public Gyroscope(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, String outputFilename){
+    public Gyroscope(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, MainActivity.CaptureMode mode, String outputFilename, String deviceInfo){
         try {
             interfaceAccess = parentInterfaceAccess;
             gyroStatus = statusTextview;
@@ -70,8 +69,11 @@ public class Gyroscope {
 
             csvDAO = new CsvDAO(parentInterfaceAccess.getApplicationContext(),
                     parentInterfaceAccess.getApplicationContext().getExternalFilesDir(null));
+            captureMode = mode;
             capturedData = new ArrayList<String>();
-            filename = outputFilename;
+            //add the capture mode to the start of the filename
+            filename = mode.toString()+outputFilename;
+            logTag += deviceInfo;
             logModule = mwBoard.getModule(Logging.class);
             setStatus("Interface Initialised",Color.RED);
         } catch (UnsupportedModuleException e) {
@@ -102,15 +104,13 @@ public class Gyroscope {
      * @param reportToConsole if true, it will report the read values to the console
      * @param storeToFile if true, it will store the read values to a file
      */
-    public void configureGyroscope(MainActivity.CaptureMode mode, final Boolean reportToConsole, final Boolean storeToFile) {
+    public void configureGyroscope(final Boolean reportToConsole, final Boolean storeToFile) {
         // Set the measurement range to +/-2000 degrees/s
         // Set output data rate to 100Hz
         bmi160GyroModule.configure()
                 .setFullScaleRange(scaleRange)
                 .setOutputDataRate(outputDataRate)
                 .commit();
-
-        captureMode = mode;
 
         switch (captureMode){
             case STREAM:
@@ -123,10 +123,11 @@ public class Gyroscope {
                                 result.subscribe(gyroStreamKEY, new RouteManager.MessageHandler() {
                                     @Override
                                     public void process(Message message) {
-                                        setStatus("Stream working correctly" + System.currentTimeMillis(),Color.GREEN);
                                         final CartesianFloat spinData = message.getData(CartesianFloat.class);
+                                        setStatus(spinData.toString(),Color.GREEN);
+
                                         if (reportToConsole)
-                                            Log.i(TAG, spinData.toString());
+                                            Log.i(logTag, spinData.toString());
                                         if(storeToFile) {
 
                                             capturedData.add(System.currentTimeMillis() + "," + message.getTimestamp().getTimeInMillis() + ","
@@ -142,28 +143,30 @@ public class Gyroscope {
                             @Override
                             public void failure(Throwable error) {
                                 setStatus("Stream error!",Color.RED);
-                                Log.e(TAG, "Error committing route", error);
+                                Log.e(logTag, "Error committing route", error);
                             }
                         });
                 break;
 
             case LOG:
-                Log.i(TAG, "Starting log mode");
+                Log.i(logTag, "Starting log mode");
                 //Stream rotation data around the XYZ axes from the gyro sensor
                 bmi160GyroModule.routeData().fromAxes().log(gyroLogKEY).commit()
                         .onComplete(new AsyncOperation.CompletionHandler<RouteManager>() {
                             @Override
                             public void success(RouteManager result) {
-                                Log.i(TAG, "log data source correctly configured");
+                                Log.i(logTag, "log data source correctly configured");
                                 setStatus("Log working correctly",Color.GREEN);
 
                                 result.setLogMessageHandler(gyroLogKEY, new RouteManager.MessageHandler() {
                                     @Override
                                     public void process(Message message) {
                                         final CartesianFloat spinData = message.getData(CartesianFloat.class);
-                                        Log.i(TAG, "Processing:" + String.format("Log: %s", spinData.toString()));
+                                        setStatus(spinData.toString(),Color.GREEN);
+
+                                        Log.i(logTag, "Processing:" + String.format("Log: %s", spinData.toString()));
                                         if (reportToConsole)
-                                            Log.i(TAG, spinData.toString());
+                                            Log.i(logTag, spinData.toString());
                                         if(storeToFile) {
                                             capturedData.add(System.currentTimeMillis() + "," + message.getTimestamp().getTimeInMillis() + ","
                                                     + spinData.toString().replaceAll("[()]",""));
@@ -177,14 +180,14 @@ public class Gyroscope {
 
                             @Override
                             public void failure(Throwable error) {
-                                Log.e(TAG, "Error committing route", error);
+                                Log.e(logTag, "Error committing route", error);
                                 setStatus("Log error!",Color.RED);
                             }
 
                         });
                 break;
             default:
-                Log.e(TAG,"incorrect logging mode");
+                Log.e(logTag,"incorrect logging mode");
                 setStatus("Incorrect logging mode",Color.YELLOW);
 
                 break;
@@ -196,7 +199,7 @@ public class Gyroscope {
      *
      */
     public void startGyroscope(){
-        Log.i(TAG, "Starting at:"+System.currentTimeMillis());
+        Log.i(logTag, "Starting at:"+System.currentTimeMillis());
         capturedData.add(captureMode +"," + System.currentTimeMillis() + ",-1,-1,-1");
         if(captureMode== MainActivity.CaptureMode.LOG) {
             logModule.startLogging();
@@ -216,7 +219,7 @@ public class Gyroscope {
         @Override
         public void run() {
             // Do something here on the main thread
-            Log.d(TAG, "Executing periodic log flush");
+            Log.d(logTag, "Executing periodic log flush");
             downloadDataLog();
             logDownloadHandler.postDelayed(periodicLogDownload, logDownloadFrequency);
         }
@@ -230,18 +233,19 @@ public class Gyroscope {
         logModule.downloadLog(0.05f,new Logging.DownloadHandler() {
             @Override
             public void onProgressUpdate(int nEntriesLeft, int totalEntries) {
-                Log.i(TAG, String.format("Progress= %d / %d", nEntriesLeft,
+                Log.i(logTag, String.format("Progress= %d / %d", nEntriesLeft,
                         totalEntries));
             }
             @Override
             public void receivedUnknownLogEntry(byte logId, Calendar timestamp, byte[] data) {
-                Log.i(TAG, String.format("Unknown log entry: {id: %d, data: %s}", logId,timestamp.getTimeInMillis(), Arrays.toString(data)));
+                Log.i(logTag, String.format("Unknown log entry: {id: %d, data: %s}", logId,timestamp.getTimeInMillis(), Arrays.toString(data)));
             }
         });
     }
 
     private void flushDataBuffer(){
-        Log.i(TAG, "Storing " + capturedData.size() +" to " + filename);
+        Log.i(logTag, "Storing " + capturedData.size() +" to " + filename);
+
         for (int i=0; i<capturedData.size();i++) {
             csvDAO.writeToFile(filename, capturedData.get(i));
         }
@@ -258,12 +262,13 @@ public class Gyroscope {
      *
      */
     public void stopGyroscope(){
-        Log.i(TAG, "Final flush to " +filename);
+        Log.i(logTag, "Final flush to " +filename);
         flushDataBuffer();
         if(captureMode== MainActivity.CaptureMode.LOG) {
-            Log.i(TAG, "Stopping log");
+            Log.i(logTag, "Stopping log");
             logModule.stopLogging();
-            logDownloadHandler.removeCallbacks(periodicLogDownload);
+            //There is a situation in which if the log mode is started, but failed to connect, this object will never be initialised, crashing the app
+            if (logDownloadHandler!=null) logDownloadHandler.removeCallbacks(periodicLogDownload);
         }
         bmi160GyroModule.stop();
     }
