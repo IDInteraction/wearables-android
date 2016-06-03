@@ -127,7 +127,7 @@
         android:layout_height="wrap_content"
         android:text="ALL"
         android:id="@+id/startAll"
-        android:layout_alignParentBottom="true"
+        android:layout_alignBottom="@+id/leftDeviceGyroStatus"
         android:layout_centerHorizontal="true" />
 
     <Button
@@ -180,7 +180,7 @@
         android:layout_height="wrap_content"
         android:text="Gyroscope Status"
         android:id="@+id/leftDeviceGyroStatus"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/faceDetectButton"
         android:layout_alignParentStart="true" />
 
     <TextView
@@ -189,6 +189,7 @@
         android:text="Gyroscope Status"
         android:id="@+id/rightDeviceGyroStatus"
         android:layout_alignParentBottom="true"
+        android:layout_alignBaseline="@+id/leftDeviceGyroStatus"
         android:layout_alignParentEnd="true" />
 
     <TextView
@@ -206,6 +207,23 @@
         android:id="@+id/resetButton"
         android:layout_alignParentTop="true"
         android:layout_toStartOf="@+id/startGyroRight" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="FaceDetection"
+        android:id="@+id/faceDetectButton"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceLarge"
+        android:text="FaceDetectionStatus"
+        android:id="@+id/faceDetectStatus"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true" />
 
 
 </RelativeLayout>

@@ -78,6 +78,11 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
     Button resetButton;
     Button disconnectAllButton;
 
+    //Face detection
+    FaceDetection faceDetection;
+    Button startFaceDetection;
+    private String faceDetectionFilename = "faceDetect"+System.currentTimeMillis()+".csv";
+
     //sensors will have access to a textview, in order to report individual status and problems
     TextView leftGyroStatus;
     TextView leftAccStatus;
@@ -86,6 +91,8 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
     TextView rightAccStatus;
 
     private Logging logModule;
+
+    TextView faceDetectStatus;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +128,7 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
             rightGyroStatus = (TextView) findViewById(R.id.rightDeviceGyroStatus);
             rightAccStatus = (TextView) findViewById(R.id.rightDeviceAccStatus);
 
+            faceDetectStatus = (TextView) findViewById(R.id.faceDetectStatus);
 
             //captureModeStream and capturemodeLog are textviews that will switch the
             //capture mode when pressed, alternating between red and green to show the current state.
@@ -402,11 +410,19 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
                     }
                 }
             });
+            startFaceDetection = (Button) findViewById(R.id.faceDetectButton);
+            startFaceDetection.setTextColor(Color.RED);
+            startFaceDetection.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    configureFaceDetection();
+                }
+            });
         }
         catch (NullPointerException e){
             e.printStackTrace();
         }
     }
+
 
     @Override
     public void onDestroy() {
@@ -655,10 +671,12 @@ public class MainActivity extends AppCompatActivity implements BleScannerFragmen
         }
     }
 
-    // Start downloading the log
-    // All MessageHandlers passed to setLogMessageHandler will be called
-    public void downloadDeviceData() {
-       //TODO Look into the documentation and finish implementing the data downloader module.
+    private void  configureFaceDetection() {
+        Log.i("MainActivity", "Starting Face Detection");
+        Intent intent = new Intent(this, FaceDetection.class);
+        startActivity(intent);
+
+        //faceDetection = new FaceDetection(this, faceDetectStatus, faceDetectionFilename);
     }
 
 }
