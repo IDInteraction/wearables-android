@@ -560,8 +560,8 @@ public class FaceDetection extends Activity implements CvCameraViewListener2 {
         if (capturedData.size() >= bufferSize) {
             flushDataBuffer();
         }
-            facesArrayGlobal = new ArrayList<>();
-            eyesArrayGlobal = new ArrayList<>();
+        facesArrayGlobal = new ArrayList<>();
+        eyesArrayGlobal = new ArrayList<>();
     }
     private void flushDataBuffer(){
         Log.i(logTag, "Storing " + capturedData.size() +" to " + filename);

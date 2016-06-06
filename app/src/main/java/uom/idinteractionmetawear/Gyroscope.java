@@ -30,7 +30,6 @@ import java.util.Calendar;
  */
 public class Gyroscope {
 
-
     private String gyroStreamKEY = "gyro_stream";
     private String gyroLogKEY = "gyro_log";
 
@@ -43,7 +42,7 @@ public class Gyroscope {
     private int bufferSize = 100;
     private CsvDAO csvDAO;
     private Logging logModule;
-    private MainActivity.CaptureMode captureMode;
+    private Constants.CaptureMode captureMode;
     private Handler logDownloadHandler;
     private static final int logDownloadFrequency = 2000;
 
@@ -59,7 +58,7 @@ public class Gyroscope {
      *
      * @param mwBoard
      */
-    public Gyroscope(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, MainActivity.CaptureMode mode, String outputFilename, String deviceInfo){
+    public Gyroscope(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, Constants.CaptureMode mode, String outputFilename, String deviceInfo){
         try {
             interfaceAccess = parentInterfaceAccess;
             gyroStatus = statusTextview;
@@ -201,7 +200,7 @@ public class Gyroscope {
     public void startGyroscope(){
         Log.i(logTag, "Starting at:"+System.currentTimeMillis());
         capturedData.add(captureMode +"," + System.currentTimeMillis() + ",-1,-1,-1");
-        if(captureMode== MainActivity.CaptureMode.LOG) {
+        if(captureMode== Constants.CaptureMode.LOG) {
             logModule.startLogging();
             startPeriodicFlush();
         }
@@ -251,7 +250,7 @@ public class Gyroscope {
         }
         capturedData = new ArrayList<String>();
 
-        if (captureMode==MainActivity.CaptureMode.LOG)
+        if (captureMode==Constants.CaptureMode.LOG)
             downloadDataLog();
     }
 
@@ -264,7 +263,7 @@ public class Gyroscope {
     public void stopGyroscope(){
         Log.i(logTag, "Final flush to " +filename);
         flushDataBuffer();
-        if(captureMode== MainActivity.CaptureMode.LOG) {
+        if(captureMode== Constants.CaptureMode.LOG) {
             Log.i(logTag, "Stopping log");
             logModule.stopLogging();
             //There is a situation in which if the log mode is started, but failed to connect, this object will never be initialised, crashing the app

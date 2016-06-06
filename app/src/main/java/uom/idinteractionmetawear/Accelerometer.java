@@ -45,7 +45,7 @@ public class Accelerometer {
     private static final int bufferSize = 100;
     private CsvDAO csvDAO;
     private Logging logModule;
-    private MainActivity.CaptureMode captureMode;
+    private Constants.CaptureMode captureMode;
     private Handler logDownloadHandler;
     private static final int logDownloadFrequency = 2000;
 
@@ -60,7 +60,7 @@ public class Accelerometer {
      * Constructor. Returns null if the accelerometer module cannot be found in this device.
      * @param mwBoard
      */
-    public Accelerometer(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, MainActivity.CaptureMode mode, String outputFilename, String deviceInfo){
+    public Accelerometer(MetaWearBoard mwBoard, Activity parentInterfaceAccess, TextView statusTextview, Constants.CaptureMode mode, String outputFilename, String deviceInfo){
         try {
             interfaceAccess = parentInterfaceAccess;
             accStatus = statusTextview;
@@ -207,7 +207,7 @@ public class Accelerometer {
     public void startAccelerometer(){
         Log.i(logTag, "Starting at:"+System.currentTimeMillis());
         capturedData.add(captureMode +"," + System.currentTimeMillis() + ",-1,-1,-1");
-        if(captureMode== MainActivity.CaptureMode.LOG) {
+        if(captureMode== Constants.CaptureMode.LOG) {
             logModule.startLogging();
             startPeriodicFlush();
         }
@@ -253,7 +253,7 @@ public class Accelerometer {
         }
         capturedData = new ArrayList<String>();
 
-        if (captureMode==MainActivity.CaptureMode.LOG)
+        if (captureMode==Constants.CaptureMode.LOG)
             downloadDataLog();
     }
 
@@ -264,7 +264,7 @@ public class Accelerometer {
     public void stopAccelerometer(){
         flushDataBuffer();
         Log.i(logTag, "Final flush to " +filename);
-        if(captureMode== MainActivity.CaptureMode.LOG) {
+        if(captureMode== Constants.CaptureMode.LOG) {
             Log.i(logTag, "Stopping log");
             logModule.stopLogging();
             //There is a situation in which if the log mode is started, but failed to connect, this object will never be initialised, crashing the app
